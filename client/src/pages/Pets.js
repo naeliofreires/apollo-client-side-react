@@ -4,24 +4,34 @@ import { useQuery } from "@apollo/react-hooks";
 
 import PetBox from "../components/PetBox";
 import NewPet from "../components/NewPet";
+import Loader from "../components/Loader";
+import Error from "../components/Error";
 
-const query = gql`
-  query GetPets {
+const ALL_PETS = gql`
+  query AllPets {
     pets {
+      id
       name
+      type
+      img
     }
   }
 `;
 
 export default function Pets() {
   const [modal, setModal] = useState(false);
-  const { error, data } = useQuery(query);
+  const { error, data, loading } = useQuery(ALL_PETS);
 
-  const pets = error ? [] : data.pets;
+  if (loading) {
+    return <Loader />;
+  }
 
-  const onSubmit = (input) => {
-    setModal(false);
-  };
+  if (error) {
+    return <Error />;
+  }
+
+  const pets = data.pets;
+  const onSubmit = () => setModal(false);
 
   const petsList = pets.map((pet) => (
     <div className="col-xs-12 col-md-4 col" key={pet.id}>
