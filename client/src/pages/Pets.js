@@ -1,21 +1,29 @@
 import React, { useState } from "react";
+import gql from "graphql-tag";
+import { useQuery } from "@apollo/react-hooks";
+
 import PetBox from "../components/PetBox";
 import NewPet from "../components/NewPet";
 
-const pets = {
-  data: {
-    pets: [],
-  },
-};
+const query = gql`
+  query GetPets {
+    pets {
+      name
+    }
+  }
+`;
 
 export default function Pets() {
   const [modal, setModal] = useState(false);
+  const { error, data } = useQuery(query);
+
+  const pets = error ? [] : data.pets;
 
   const onSubmit = (input) => {
     setModal(false);
   };
 
-  const petsList = pets.data.pets.map((pet) => (
+  const petsList = pets.map((pet) => (
     <div className="col-xs-12 col-md-4 col" key={pet.id}>
       <div className="box">
         <PetBox pet={pet} />
