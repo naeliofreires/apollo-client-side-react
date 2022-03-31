@@ -1,37 +1,48 @@
 import React, { useState } from "react";
-import gql from "graphql-tag";
-import { useQuery } from "@apollo/react-hooks";
+import { useQuery, useMutation } from "@apollo/react-hooks";
 
 import PetBox from "../components/PetBox";
 import NewPet from "../components/NewPet";
 import Loader from "../components/Loader";
 import Error from "../components/Error";
 
-const ALL_PETS = gql`
-  query AllPets {
-    pets {
-      id
-      name
-      type
-      img
-    }
-  }
-`;
+import { mutations, queries } from "../graphql";
 
 export default function Pets() {
   const [modal, setModal] = useState(false);
-  const { error, data, loading } = useQuery(ALL_PETS);
+  const allPets = useQuery(queries.ALL_PETS);
+  const [createPet, response] = useMutation(mutations.CREATE_A_PET, {
+    update(cache, { data: { addPet } }) {
+      const data = cache.readQuery({ query: queries.ALL_PETS });
 
-  if (loading) {
+      cache.writeQuery({
+        query: queries.ALL_PETS,
+        data: { pets: [addPet, ...data.pets] },
+      });
+    },
+  });
+
+  if (allPets.loading || response.loading) {
     return <Loader />;
   }
 
-  if (error) {
+  if (allPets.error || response.error) {
     return <Error />;
   }
 
-  const pets = data.pets;
-  const onSubmit = () => setModal(false);
+  const pets = allPets.data.pets;
+  const onSubmit = (input) => {
+    createPet({
+      variables: {
+        input: {
+          name: input.name,
+          type: input.type,
+        },
+      },
+    });
+
+    setModal(false);
+  };
 
   const petsList = pets.map((pet) => (
     <div className="col-xs-12 col-md-4 col" key={pet.id}>
