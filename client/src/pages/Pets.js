@@ -11,7 +11,7 @@ import { mutations, queries } from "../graphql";
 export default function Pets() {
   const [modal, setModal] = useState(false);
   const allPets = useQuery(queries.ALL_PETS);
-  const [createPet, response] = useMutation(mutations.CREATE_A_PET, {
+  const [createPet] = useMutation(mutations.CREATE_A_PET, {
     update(cache, { data: { addPet } }) {
       const data = cache.readQuery({ query: queries.ALL_PETS });
 
@@ -22,11 +22,11 @@ export default function Pets() {
     },
   });
 
-  if (allPets.loading || response.loading) {
+  if (allPets.loading) {
     return <Loader />;
   }
 
-  if (allPets.error || response.error) {
+  if (allPets.error) {
     return <Error />;
   }
 
@@ -37,6 +37,20 @@ export default function Pets() {
         input: {
           name: input.name,
           type: input.type,
+        },
+      },
+      optimisticResponse: {
+        __typename: "Mutation",
+        addPet: {
+          /**
+           * return's type of the addPet mutation
+           * you can find this on the Appolo Dev Tools
+           */
+          __typename: "Pet",
+          id: Math.floor(Math.random() * 1000) + "",
+          name: input.name,
+          type: input.type,
+          img: "https://via.placeholder.com/300x300",
         },
       },
     });
